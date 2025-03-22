@@ -1,0 +1,52 @@
+﻿@page "/login"
+@using TemplateWeb.Client.Services
+@using Template.Models.Models
+
+@inject JwtAuthService JwtAuthService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Log in</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="login-container">
+    <MudGrid>
+        <MudItem xs="12" Style="text-align: center;">
+            <img src="/images/logo.png" class="logo" alt="logo"/>
+            <h2>Welcome</h2>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Label="Email" T="string" @bind-Value="LoginModel.Email"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Label="Password" T="string" @bind-Value="LoginModel.Password" InputType="InputType.Password"/>
+        </MudItem>
+        <MudItem xs="12">
+            <MudButton OnClick="@LoginUser" Variant="Variant.Filled" Size="Size.Large" Color="Color.Primary" FullWidth="true" EndIcon="@Icons.Material.Filled.Login">Log in</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private string? errorMessage;
+
+    private LoginModel LoginModel { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (JwtAuthService.IsAuthenticated)
+            NavigationManager.NavigateTo("/");
+    }
+
+    private async Task LoginUser()
+    {
+        var success = await JwtAuthService.Authenticate(LoginModel);
+        if (success)
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            Snackbar.Add($"Something went wrong while logging in, please check your username and password", Severity.Error);
+        }
+    }
+}

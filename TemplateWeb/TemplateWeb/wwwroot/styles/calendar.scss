@@ -1,0 +1,48 @@
+@import 'constants';
+
+.calendar-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-gap: 10px;
+  margin-top: 10px;
+
+  .calendar-day-container {
+
+    .calendar-day-menu {
+      width: 100%;
+      font-weight: 900;
+      flex-direction: row-reverse;
+    }
+
+    .calendar-time-header {
+      font-weight: bold;
+    }
+
+    .calendar-time-body {
+      margin-bottom: 10px;
+    }
+    
+    .mud-card-content {
+      &:hover {
+        background-color: $calendar-hover;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+    }
+
+    .calendar-appointment {
+      border-left: 5px solid $primary-color;
+      padding: 5px;
+      margin-bottom: 5px;
+
+      &:hover {
+        background-color: $calendar-hover;
+        cursor: pointer;
+      }
+    }
+
+    .calendar-time-section {
+      margin-bottom: 15px;
+    }
+  }
+}

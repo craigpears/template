@@ -1,0 +1,74 @@
+﻿@using MudBlazor
+@using TemplateWeb.Client.Services
+@implements IDisposable
+
+@inject NavigationManager NavigationManager
+@inject JwtAuthService JwtAuthService
+       
+<div class="l-navbar @(_drawerOpen ? "expander" : "")" id="navbar">
+    <nav class="nav">   
+        <div>
+            <div class="nav-brand">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" OnClick="ToggleDrawer"></MudIconButton>
+            </div>
+            <div class="nav-list">
+                @if (JwtAuthService.IsAuthenticated)
+                {
+                    <a href="/calendar" class="nav-link">
+                        <MudIcon Icon="@Icons.Material.Filled.EditCalendar" Size="Size.Large" Class="nav-icon"></MudIcon>
+                        <span class="nav-name">Calendar</span>
+                    </a>
+                }
+                else
+                {
+                    <a href="/login" class="nav-link active">
+                        <MudIcon Icon="@Icons.Material.Filled.Login" Class="nav-icon"></MudIcon>
+                        <span class="nav-name">Login</span>
+                    </a>
+                }
+            </div>
+        </div>
+        @if (JwtAuthService.IsAuthenticated)
+        {
+            <a href="/login" class="nav-link" OnClick="@Logout">
+                <MudIcon Icon="@Icons.Material.Filled.Logout" Class="nav-icon"></MudIcon>
+                <span class="nav-name">Logout</span>
+            </a>
+        }
+    </nav>
+</div>
+
+@code {
+    private string? currentUrl;
+    private bool _drawerOpen = false;
+
+    protected void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+    private async Task Logout()
+    {
+        await JwtAuthService.Logout();
+        NavigationManager.NavigateTo("/login");
+    }
+
+}

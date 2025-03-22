@@ -1,0 +1,259 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+.calendar-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-gap: 10px;
+  margin-top: 10px;
+}
+.calendar-container .calendar-day-container .calendar-day-menu {
+  width: 100%;
+  font-weight: 900;
+  flex-direction: row-reverse;
+}
+.calendar-container .calendar-day-container .calendar-time-header {
+  font-weight: bold;
+}
+.calendar-container .calendar-day-container .calendar-time-body {
+  margin-bottom: 10px;
+}
+.calendar-container .calendar-day-container .mud-card-content:hover {
+  background-color: #ffe9da;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.calendar-container .calendar-day-container .calendar-appointment {
+  border-left: 5px solid #05C3DE;
+  padding: 5px;
+  margin-bottom: 5px;
+}
+.calendar-container .calendar-day-container .calendar-appointment:hover {
+  background-color: #ffe9da;
+  cursor: pointer;
+}
+.calendar-container .calendar-day-container .calendar-time-section {
+  margin-bottom: 15px;
+}
+
+.l-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 92px;
+  height: 100vh;
+  background-color: #12192C;
+  color: #FFFFFF;
+  padding: 1.5rem 1.5rem 2rem;
+  transition: 0.5s;
+  z-index: 100;
+}
+
+.nav {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.nav-brand {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+.nav-brand svg {
+  color: #FFFFFF;
+}
+
+.nav-toggle {
+  font-size: 1.25rem;
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.nav-logo {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.nav-link {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  align-items: center;
+  column-gap: 0.75rem;
+  padding: 0.75rem;
+  color: #FFFFFF;
+  border-radius: 0.5rem;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background-color: #222533;
+}
+
+.nav-icon {
+  font-size: 1.25rem;
+}
+
+.nav-name {
+  font-size: 0.875rem;
+}
+
+.expander {
+  width: calc(92px + 9.25rem);
+}
+
+.active {
+  color: #5e63ff;
+}
+
+.collapse {
+  grid-template-columns: 20px max-content 1fr;
+}
+
+.collapse-link {
+  justify-self: flex-end;
+  transition: 0.5s;
+}
+
+.collapse-menu {
+  display: none;
+  padding: 0.75rem 2.25rem;
+}
+
+.collapse-sublink {
+  color: #B6CEFC;
+  font-size: 0.875rem;
+}
+
+.collapse-sublink:hover {
+  color: #FFFFFF;
+}
+
+.showCollapse {
+  display: block;
+}
+
+.rotate {
+  transform: rotate(180deg);
+  transition: 0.5s;
+}
+
+html, body {
+  font-family: "Poppins", sans-serif;
+}
+
+h1:focus {
+  outline: none;
+}
+
+.nav-drawer {
+  font-weight: 900;
+  text-align: center;
+}
+.nav-drawer .nav-menu-close-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.nav-drawer h1 {
+  padding-top: 30px;
+  padding-bottom: 20px;
+  width: 100%;
+  font-weight: 900;
+  color: #101820;
+}
+
+.login-container {
+  padding-top: 15vh;
+}
+.login-container .logo {
+  width: 50%;
+}
+
+header .mud-input {
+  color: white !important;
+}
+
+.mud-paper.full-height {
+  height: 100%;
+}
+
+.mud-grid-item .mud-paper.full-height {
+  height: calc(100% - 16px);
+}
+
+.top-nav-bar {
+  border-bottom: 1px solid #E0E0E0;
+  margin-bottom: 15px;
+}
+.top-nav-bar .filters-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.mud-main-content {
+  padding-top: 15px !important;
+  margin-left: 92px;
+}
+
+.mud-card-header {
+  border-bottom: 1px solid #d1d4f6;
+  padding: 16px;
+  border-radius: 0;
+}
+.mud-card-header h6 {
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.mud-card-header,
+.mud-table-head,
+.mud-tabs-tabbar {
+  background-color: #dddff8;
+}
+
+.mud-card-content,
+.mud-table-body {
+  background-color: #f4f4fd;
+}
+
+.floating-actions-container {
+  position: relative;
+}
+.floating-actions-container .mud-card-actions.floating-actions {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 50%;
+  flex-direction: row-reverse;
+}
+.floating-actions-container .mud-card-actions.floating-actions.dense {
+  padding: 4px;
+}
+
+.section-header {
+  margin-top: 50px;
+  margin-bottom: 20px;
+}
+
+.mud-list-item-icon {
+  min-width: 34px;
+}
+
+.mud-typography-subtitle1 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.add-line-dialog,
+.finalise-order-dialog {
+  width: 500px;
+}
+
+/*# sourceMappingURL=app.css.map */

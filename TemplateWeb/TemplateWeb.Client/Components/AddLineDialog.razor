@@ -1,0 +1,68 @@
+﻿@using Template.Models.Models
+@using Template.Models
+<MudDialog Class="add-line-dialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Align="Align.Center">Add line</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudStack>
+            <MudTextField T="string" Label="Room Ref" Required="true" @bind-Value="QuoteLine.RoomRef"></MudTextField>
+            <MudTextField T="string" Label="Width" Required="true" @bind-Value="QuoteLine.Width"></MudTextField>
+            <MudTextField T="string" Label="Drop" Required="true" @bind-Value="QuoteLine.Drop"></MudTextField>
+            <MudTextField T="string" Label="Installation Height" Required="true" @bind-Value="QuoteLine.InstallationHeight"></MudTextField>
+            <MudSelect Label="Product Type" T="ProductType" @bind-Value="QuoteLine.ProductType">
+                @foreach (var productType in (ProductType[])Enum.GetValues(typeof(ProductType)))
+                {
+                    <MudSelectItem T="ProductType" Value="@productType">@productType.GetDisplayName()</MudSelectItem>
+                }
+            </MudSelect>
+            @foreach (var option in ApplicableConfigurationOptions)
+            {
+                // TODO: Need to handle case where it's just a textbox - ie where Text and Name properties are null and there are no values
+                <MudSelect Label="@option.FieldName" T="string" Value="@GetOptionsValue(option)" ValueChanged="(string v) => UpdateValue(option, v)">
+                    @foreach (var value in option.Values)
+                    {
+                        <MudSelectItem T="string" Value="@value">@value</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="TrySubmit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; }
+    [Parameter] public List<FieldConfigurationOptions> ConfigurationOptions { get; set; }
+    [Parameter] public QuoteLine QuoteLine { get; set; }
+
+    private List<FieldConfigurationOptions> ApplicableConfigurationOptions => ConfigurationOptions.Where(x => x.ProductType == QuoteLine.ProductType).ToList();
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void TrySubmit()
+    {
+        if (   string.IsNullOrEmpty(QuoteLine.RoomRef)
+            || string.IsNullOrEmpty(QuoteLine.Width)
+            || string.IsNullOrEmpty(QuoteLine.Drop)
+            || string.IsNullOrEmpty(QuoteLine.InstallationHeight))
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(QuoteLine));
+    }
+
+    private string GetOptionsValue(FieldConfigurationOptions options)
+    {
+        return QuoteLine.GetType().GetProperty(options.FieldName).GetValue(QuoteLine)?.ToString();
+    }
+    
+    private void UpdateValue(FieldConfigurationOptions options, string value)
+    {
+        var property = QuoteLine.GetType().GetProperty(options.FieldName);
+        property?.SetValue(QuoteLine, Convert.ChangeType(value, property.PropertyType));
+    }
+}

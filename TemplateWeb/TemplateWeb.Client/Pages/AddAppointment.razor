@@ -1,0 +1,85 @@
+﻿@page "/add-appointment/{AppointmentDate:DateTime}"
+@using Template.Models.Models
+@using Template.Models
+@rendermode InteractiveAuto
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>Add Appointment</PageTitle>
+
+@code {
+    [Parameter]
+    public string AppointmentDate { get; set; }
+    
+    protected Appointment AppointmentToAdd { get; set; }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        AppointmentToAdd = new Appointment
+        {
+            AppointmentDate = DateTime.Parse(AppointmentDate),
+            DeliveryAddressSameAsOrderAddress = true
+        };
+    }
+
+    protected async Task CreateAppointment()
+    {
+        var response = await Http.PostAsJsonAsync("api/appointments", AppointmentToAdd);
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Appointment saved successfully", Severity.Success);
+            NavigationManager.NavigateTo("/calendar");
+        }
+        else
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            Snackbar.Add($"Something went wrong - {content}", Severity.Error);
+        }
+    }
+}
+
+<MudContainer MaxWidth="MaxWidth.Small">
+    <MudCard Elevation="25">
+        <MudCardContent>
+            <MudStack>
+                <MudSelect Label="Title" T="Title" @bind-Value="AppointmentToAdd.Title">
+                    @foreach (var title in (Title[])Enum.GetValues(typeof(Title)))
+                    {
+                        <MudSelectItem T="Title" Value="@title">@title.GetDisplayName()</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudTextField Label="Surname" T="string" @bind-Value="AppointmentToAdd.Surname"/>
+                <MudTextField Label="Company Name" T="string" @bind-Value="AppointmentToAdd.CompanyName"/>
+                <MudSelect Label="Customer Type" T="CustomerType" @bind-Value="AppointmentToAdd.CustomerType">
+                    @foreach (var customerType in (CustomerType[])Enum.GetValues(typeof(CustomerType)))
+                    {
+                        <MudSelectItem T="CustomerType" Value="@customerType">@customerType.GetDisplayName()</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudTextField Label="Address 1" T="string" @bind-Value="AppointmentToAdd.Address1"/>
+                <MudTextField Label="Address 2" T="string" @bind-Value="AppointmentToAdd.Address2" />
+                <MudTextField Label="Town" T="string" @bind-Value="AppointmentToAdd.Town" />
+                <MudTextField Label="County" T="string" @bind-Value="AppointmentToAdd.County" />
+                <MudTextField Label="Postcode" T="string" @bind-Value="AppointmentToAdd.Postcode" />
+                <MudTextField Label="Tel" T="string" @bind-Value="AppointmentToAdd.Telephone" />
+                <MudTextField Label="Alternative Tel" T="string" @bind-Value="AppointmentToAdd.AlternativeTelephone" />
+                <MudTextField Label="Email" T="string" @bind-Value="AppointmentToAdd.Email" />
+                <MudCheckBox Label="Delivery address is the same as the order address" @bind-Value="AppointmentToAdd.DeliveryAddressSameAsOrderAddress" />
+                
+                @if (!AppointmentToAdd.DeliveryAddressSameAsOrderAddress)
+                {
+                    <MudTextField Label="Delivery Address 1" @bind-Value="AppointmentToAdd.DeliveryAddress1" />
+                    <MudTextField Label="Delivery Address 2" @bind-Value="AppointmentToAdd.DeliveryAddress2" />
+                    <MudTextField Label="Delivery Town" @bind-Value="AppointmentToAdd.DeliveryTown" />
+                    <MudTextField Label="Delivery County" @bind-Value="AppointmentToAdd.DeliveryCounty" />
+                    <MudTextField Label="Delivery Postcode" @bind-Value="AppointmentToAdd.DeliveryPostcode" />
+                }
+            </MudStack>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton @onclick="async () => await CreateAppointment()" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" EndIcon="@Icons.Material.Filled.Save">Create appointment</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudContainer>

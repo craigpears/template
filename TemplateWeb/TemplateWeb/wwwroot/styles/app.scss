@@ -1,0 +1,126 @@
+@import 'constants';
+@import 'calendar';
+@import 'nav';
+
+html, body {
+    font-family: "Poppins", sans-serif;
+}
+
+h1:focus {
+    outline: none;
+}
+
+.nav-drawer {
+    font-weight: 900;
+    text-align: center;    
+
+    .nav-menu-close-container {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+        
+    h1 {
+        padding-top: 30px;
+        padding-bottom: 20px;
+        width: 100%;
+        font-weight: 900;
+        color: $text-color;
+    }
+}
+
+.login-container {
+    padding-top: 15vh;
+    
+    .logo {
+        width: 50%;
+    }
+}
+
+header .mud-input {
+    color: white !important;    
+}
+
+.mud-paper.full-height {
+    height: 100%;
+}
+
+.mud-grid-item {
+    .mud-paper.full-height {
+        height: calc(100% - 16px);
+    }
+}
+
+.top-nav-bar {
+    border-bottom: 1px solid $border-colour;
+    margin-bottom: 15px;
+    
+    .filters-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 15px;
+    }
+}
+
+.mud-main-content {
+    padding-top: 15px !important;
+    margin-left: $nav-width;
+}
+
+.mud-card-header {
+    border-bottom: 1px solid #d1d4f6;
+    padding: 16px;
+    border-radius: 0;
+    
+    h6 {
+        text-transform: uppercase;
+        font-size: 14px;
+    }
+}
+
+.mud-card-header,
+.mud-table-head,
+.mud-tabs-tabbar {
+    background-color: #dddff8;
+}
+
+.mud-card-content,
+.mud-table-body
+{
+    background-color: #f4f4fd;
+}
+
+.floating-actions-container {
+    position: relative;
+
+    .mud-card-actions.floating-actions {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 50%;
+        flex-direction: row-reverse;
+        
+        &.dense {
+            padding: 4px;
+        }
+    }
+}
+
+.section-header {
+    margin-top: 50px;
+    margin-bottom: 20px;
+}
+
+.mud-list-item-icon {
+    min-width: 34px;
+}
+
+.mud-typography-subtitle1 {
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+.add-line-dialog,
+.finalise-order-dialog {
+    width: 500px;
+}

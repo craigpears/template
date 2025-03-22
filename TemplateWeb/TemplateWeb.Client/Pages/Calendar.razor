@@ -1,0 +1,133 @@
+﻿@page "/calendar"
+@using System.Text.Json
+@using System.Net
+
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+
+<PageTitle>Calendar</PageTitle>
+
+@code {
+    public DateRange _dateRange = new DateRange(DateTime.Today.AddDays(-7), DateTime.Today.AddDays(7));
+    Template.Models.Models.Calendar? _calendar = null;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Move the default dates back to run from a Monday
+        DayOfWeek startOfWeek = DayOfWeek.Monday;
+        _dateRange.Start = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + (int)startOfWeek - 7);
+        _dateRange.End = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + (int)startOfWeek + 7);
+        
+        await RefreshCalendar();
+    }
+
+    private async Task RefreshCalendar()
+    {
+        var calendarUrl = $"api/appointments/calendar?fromDate={_dateRange.Start:yyyy-MM-dd}&toDate={_dateRange.End:yyyy-MM-dd}";
+        var getCalendarDataResponse = await HttpClient.GetAsync(calendarUrl);
+        if (getCalendarDataResponse.IsSuccessStatusCode)
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var data = await getCalendarDataResponse.Content.ReadAsStringAsync();
+            _calendar = JsonSerializer.Deserialize<Template.Models.Models.Calendar>(data, options);
+            StateHasChanged();
+        }
+        else
+        {
+            if (getCalendarDataResponse.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                NavigationManager.NavigateTo("login");
+            }
+            // TODO: Do generic error handling
+        }
+    }
+
+    private void NavigateToAddAppointment(DateTime appointmentDateTime)
+    {
+        NavigationManager.NavigateTo($"/add-appointment/{appointmentDateTime:yyyy-MM-ddTHH:mm}");
+    }
+
+    private async Task OnDateRangeChanged(DateRange? newDateRange)
+    {
+        _dateRange = newDateRange!;
+        await RefreshCalendar();
+    }
+
+    private void ViewAppointment(Appointment appointment)
+    {
+        NavigationManager.NavigateTo($"/appointment/{appointment.Id}");
+    }
+}
+
+<div class="top-nav-bar">
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <div class="filters-container">
+            <div class="filter">
+                <PeriodDateRangePicker DateRange="@_dateRange" DateRangeChanged="OnDateRangeChanged"></PeriodDateRangePicker>
+            </div>
+        </div>
+    </MudContainer>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    
+    
+    @if (_calendar == null)
+    {
+        <div>Loading...</div>
+    }
+    else
+    {
+        @foreach (var week in _calendar.Weeks)
+        {
+            <div class="section-header">
+                <h3>@week.StartDate.ToString("MMMM dd yyyy") - @week.EndDate.ToString("MMMM dd yyyy")</h3>
+            </div>
+            <div class="calendar-container">
+                @foreach (var day in week.Days)
+                {
+                    <div class="calendar-day-container">
+                        <MudCard Elevation="2" Class="@(day.AnyAppointments ? "full-height floating-actions-container" : "floating-actions-container")">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6" Align="Align.Center">@day.Name</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            @if (day.AnyAppointments)
+                            {
+                                <MudCardContent>
+                                    @foreach (var timeslot in day.Timeslots)
+                                    {
+                                        <div class="calendar-time-section">
+                                            <div class="calendar-time-header">@timeslot.Name</div>
+                                            @foreach (var appointment in timeslot.Appointments)
+                                            {
+                                                <div class="calendar-appointment" @onclick="() => ViewAppointment(appointment)">@appointment.DisplayName</div>
+                                            }
+                                        </div>
+                                    }
+                                </MudCardContent>
+                            }
+                            <MudCardActions Class="floating-actions">
+                                <MudMenu FullWidth="true" AnchorOrigin="Origin.BottomLeft" class="calendar-day-menu">
+                                    <ActivatorContent>
+                                        <MudFab Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Add" DropShadow="false" Size="Size.Small"></MudFab>
+                                    </ActivatorContent>
+                                    <ChildContent>
+                                        @foreach (var timeslot in day.Timeslots)
+                                        {
+                                            <MudMenuItem OnClick="() => NavigateToAddAppointment(timeslot.DateTime)">@timeslot.Name</MudMenuItem>
+                                        }
+                                    </ChildContent>
+                                </MudMenu>
+                            </MudCardActions>
+                        </MudCard>
+                    </div>
+                }
+            </div>
+        }
+    }
+</MudContainer>

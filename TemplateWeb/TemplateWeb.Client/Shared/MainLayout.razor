@@ -1,0 +1,43 @@
+﻿@using TemplateWeb.Client.Services
+@inherits LayoutComponentBase
+
+@inject JwtAuthService JwtAuthService
+@inject NavigationManager NavigationManager
+
+<MudLayout>
+    <NavMenu/>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<MudThemeProvider Theme="MyCustomTheme" />
+<MudPopoverProvider />
+<MudSnackbarProvider />
+<MudDialogProvider />
+
+@code
+{
+    // Colours also need to be defined in colours.scss
+    MudTheme MyCustomTheme = new()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            // Call to action button colour
+            Primary = "#5e63ff",
+            PrimaryContrastText = "#ffffff",
+            // Used for the app sidebar colour
+            Secondary = "#12192C",
+            SecondaryContrastText = "#ffffff",
+            Background = "#ffffff"
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!JwtAuthService.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+}

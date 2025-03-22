@@ -1,0 +1,81 @@
+@using Template.Models.Extensions
+@code
+{
+    [Parameter]
+    public DateRange DateRange { get; set; }
+        
+    [Parameter]
+    public EventCallback<DateRange> DateRangeChanged { get; set; }
+    
+    private List<Period> Periods { get; set; }
+    
+    private Period SelectedPeriod { get; set; }
+    
+    private async Task NavigateDatesBack()
+    {
+        DateRange.Start = DateRange.Start!.Value.AddDays(-14);
+        DateRange.End = DateRange.End!.Value.AddDays(-14);
+        UpdateSelectedPeriod();
+        await DateRangeChanged.InvokeAsync(DateRange);
+    }
+    
+    private async Task NavigateDatesNext()
+    {
+        DateRange.Start = DateRange.Start!.Value.AddDays(14);
+        DateRange.End = DateRange.End!.Value.AddDays(14);
+        UpdateSelectedPeriod();
+        await DateRangeChanged.InvokeAsync(DateRange);
+    }
+
+    private void UpdateSelectedPeriod()
+    {
+        var existingPeriod = Periods.SingleOrDefault(x => x.DateRange.Start <= DateRange.Start && x.DateRange.End >= DateRange.End);
+        var customPeriod = new Period
+        {
+            DateRange = DateRange,
+            Name = $"{DateRange.Start.Value.ToString("dd MMM yy")} - {DateRange.End.Value.ToString("dd MMM yy")}"
+        };
+
+        SelectedPeriod = existingPeriod ?? customPeriod;
+    }
+
+    private class Period
+    {
+        public string Name { get; set; }
+        public DateRange DateRange { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var startOfWeek = DateTime.UtcNow.GetStartOfWeek();
+        var endOfPeriod = startOfWeek.AddDays(14);
+        var thisPeriod = new Period
+        {
+            DateRange = new DateRange(startOfWeek, endOfPeriod),
+            Name = "This period"
+        };
+
+        var lastPeriod = new Period
+        {
+            DateRange = new DateRange(startOfWeek.AddDays(-14), endOfPeriod.AddDays(-14)),
+            Name = "Last period"
+        };
+        
+        var nextPeriod = new Period
+        {
+            DateRange = new DateRange(startOfWeek.AddDays(14), endOfPeriod.AddDays(14)),
+            Name = "Next period"
+        };
+
+        Periods = [lastPeriod, thisPeriod, nextPeriod];
+        SelectedPeriod = thisPeriod;
+    }
+}
+
+<div>   
+    <MudButtonGroup Variant="Variant.Outlined">
+        <MudInput Variant="Variant.Outlined" Disabled="true" Value="@SelectedPeriod.Name"></MudInput>
+        <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" OnClick="e => NavigateDatesBack()"></MudIconButton>
+        <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowRight" OnClick="e => NavigateDatesNext()"></MudIconButton>
+    </MudButtonGroup>
+</div>

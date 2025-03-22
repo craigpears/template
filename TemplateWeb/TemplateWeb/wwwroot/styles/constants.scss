@@ -1,0 +1,22 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+
+// Colour also need to be defined in MudTheme in MainLayout.razor
+$primary-color: #05C3DE;
+$secondary-color: #05C3DE;
+$accent-color: #5e63ff;
+$text-color: #101820;
+$white-colour: #FFFFFF;
+$border-colour: #E0E0E0;
+
+// Calendar
+$calendar-hover: #ffe9da;
+
+// Nav menu
+$background-color: #12192C;
+$hover-colour: #222533;
+$sub-color: #B6CEFC;
+$normal-font-size: 1rem;
+$small-font-size: .875rem;
+
+$nav-width: 92px;
+$z-fixed: 100;

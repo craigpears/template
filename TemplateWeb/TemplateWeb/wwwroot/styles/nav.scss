@@ -1,0 +1,109 @@
+@import 'constants';
+
+.l-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: $nav-width;
+  height: 100vh;
+  background-color: $background-color;
+  color: $white-colour;
+  padding: 1.5rem 1.5rem 2rem;
+  transition: .5s;
+  z-index: $z-fixed;
+}
+
+.nav {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.nav-brand {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  
+  svg {
+    color: $white-colour;
+  }
+}
+
+.nav-toggle { 
+  font-size: 1.25rem; 
+  padding: 0.75rem; 
+  cursor: pointer; 
+}
+
+.nav-logo { 
+  color: $white-colour; 
+  font-weight: 600; 
+}
+
+.nav-link {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  align-items: center;
+  column-gap: .75rem;
+  padding: 0.75rem;
+  color: $white-colour;
+  border-radius: .5rem;
+  transition: .3s;
+  cursor: pointer;
+}
+
+.nav-link:hover { 
+  background-color: $hover-colour;
+}
+
+.nav-icon { 
+  font-size: 1.25rem; 
+}
+
+.nav-name { 
+  font-size: $small-font-size; 
+}
+
+.expander { 
+  width: calc($nav-width + 9.25rem);
+}
+
+.active { 
+  color: $accent-color;
+}
+
+.collapse { 
+  grid-template-columns: 20px max-content 1fr; 
+}
+
+.collapse-link { 
+  justify-self: flex-end; 
+  transition: .5s; 
+}
+
+.collapse-menu { 
+  display: none; 
+  padding: 0.75rem 2.25rem; 
+}
+
+.collapse-sublink { 
+  color: $sub-color; 
+  font-size: $small-font-size; 
+}
+
+.collapse-sublink:hover { 
+  color: $white-colour; 
+}
+
+.showCollapse { 
+  display: block;
+}
+
+.rotate { 
+  transform: rotate(180deg); 
+  transition: .5s;
+}

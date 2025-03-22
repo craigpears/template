@@ -1,0 +1,280 @@
+﻿@page "/appointment/{AppointmentId:int}"
+@using System.Timers
+@using Humanizer
+@using TemplateWeb.Client.Components
+@using Template.Models
+@using Template.Models.Extensions
+@using Template.Models.Models
+
+@rendermode @(new InteractiveWebAssemblyRenderMode(false))
+
+@inject NavigationManager NavigationManager
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JsRuntime
+
+<PageTitle>Appointment</PageTitle>
+
+@code {
+    [Parameter] public int AppointmentId { get; set; }
+
+    private Appointment? _appointment = null;
+    private List<FieldConfigurationOptions> _configurationOptions = [];
+    private Timer? _debounceTimer = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _configurationOptions = (await HttpClient.GetFromJsonAsync<List<FieldConfigurationOptions>>("/api/configuration-options"))!;
+        await LoadAppointment();
+    }
+
+    private async Task LoadAppointment()
+    {
+        _appointment = await HttpClient.GetFromJsonAsync<Appointment>($"/api/appointments/{AppointmentId}");
+        StateHasChanged();
+    }
+
+    private void DebounceSaveChanges()
+    {
+        _debounceTimer?.Stop();
+        _debounceTimer = new Timer(2000) { AutoReset = false };
+        _debounceTimer.Elapsed += async (sender, e) => await SaveChanges();
+        _debounceTimer.Start();
+    }
+
+    private async Task SaveChanges()
+    {
+        _debounceTimer?.Dispose();
+        _debounceTimer = null;
+        var response = await HttpClient.PutAsJsonAsync("/api/appointments", _appointment);
+        if (!response.IsSuccessStatusCode)
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            Snackbar.Add($"Something went wrong while saving - {content}", Severity.Error, options => options.RequireInteraction = true);
+        }
+        // TODO: Need to get back quote line Ids
+    }
+
+    private async Task OpenAddLineDialogAsync(QuoteLine quoteLine)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters<AddLineDialog>
+        {
+            { x => x.ConfigurationOptions, _configurationOptions },
+            { x => x.QuoteLine, quoteLine }
+        };
+        var dialog = await DialogService.ShowAsync<AddLineDialog>("Add line", dialogParameters, options);
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            var newQuoteLine = (QuoteLine)result!.Data!;
+            _appointment!.QuoteLines ??= [];
+            if (newQuoteLine.Id == 0)
+            {
+                _appointment.QuoteLines.Add(newQuoteLine);
+            }
+
+            await SaveChanges();
+            Snackbar.Add("Line added successfully", Severity.Success);
+        }
+    }
+
+    private async Task OpenDeleteLineDialogAsync(QuoteLine quoteLine)
+    {
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteLineDialog>("Delete line");
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            var response = await HttpClient.DeleteAsync($"/api/appointments/{AppointmentId}/quote-lines/{quoteLine.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                _appointment!.QuoteLines.Remove(quoteLine);
+                StateHasChanged();
+                Snackbar.Add("Line deleted successfully", Severity.Success);
+            }
+            else
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Something went wrong while saving - {content}", Severity.Error, options => options.RequireInteraction = true);
+            }
+        }
+    }
+
+    public async Task ViewOrderPdfAsync()
+    {
+        var response = await HttpClient.GetAsync($"/api/appointments/{AppointmentId}/order-pdf");
+        if (response.IsSuccessStatusCode)
+        {
+            var fileContents = await response.Content.ReadAsByteArrayAsync();
+            await JsRuntime.InvokeVoidAsync("openBlob", new { ByteArray = fileContents });
+        }
+        else
+        {
+            var content = await response.Content.ReadAsStringAsync();
+            Snackbar.Add($"Something went wrong - {content}", Severity.Error, options => options.RequireInteraction = true);
+        }
+    }
+    
+    public async Task OpenDeleteDialogAsync()
+    {
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteLineDialog>("Delete line");
+        var result = await dialog.Result;
+
+        if (!result!.Canceled)
+        {
+            var response = await HttpClient.DeleteAsync($"/api/appointments/{AppointmentId}");
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Appointment deleted successfully", Severity.Success);
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Something went wrong - {content}", Severity.Error, options => options.RequireInteraction = true);
+            }
+        }
+    }
+}
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    @if (_appointment == null)
+    {
+        <div>Loading...</div>
+    }
+    else
+    {
+        <div class="filters-container">
+            <div class="filter">
+                <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                         Label="Actions"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined"
+                         AnchorOrigin="Origin.BottomRight"
+                         TransformOrigin="Origin.TopRight"
+                         Class="actions-button">
+                    <MudDivider></MudDivider>
+                    <MudMenuItem OnClick="e => OpenDeleteDialogAsync()" Icon="@Icons.Material.Filled.Delete">Delete</MudMenuItem>
+                </MudMenu>
+            </div>
+        </div>
+        
+        
+        <MudTabs>
+            <MudTabPanel Text="Customer Details">
+                <MudCard Elevation="25" Class="mb-4">
+                    <MudCardContent>
+                        <MudStack>
+                            <MudSelect Value="@_appointment.Title" ValueChanged="v => { _appointment.Title = v; DebounceSaveChanges(); }" Label="Title" T="Title">
+                                @foreach (var title in (Title[])Enum.GetValues(typeof(Title)))
+                                {
+                                    <MudSelectItem T="Title" Value="@title">@title.GetDisplayName()</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField Value="@_appointment.Surname" ValueChanged="v => { _appointment.Surname = v; DebounceSaveChanges(); }" Label="Surname" T="string"/>
+                            <MudTextField Value="@_appointment.CompanyName" ValueChanged="v => { _appointment.CompanyName = v; DebounceSaveChanges(); }" Label="Company Name" T="string"/>
+                            <MudTextField Value="@_appointment.Address1" ValueChanged="v => { _appointment.Address1 = v; DebounceSaveChanges(); }" Label="Address 1" T="string"/>
+                            <MudTextField Value="@_appointment.Address2" ValueChanged="v => { _appointment.Address2 = v; DebounceSaveChanges(); }" Label="Address 2" T="string"/>
+                            <MudTextField Value="@_appointment.County" ValueChanged="v => { _appointment.County = v; DebounceSaveChanges(); }" Label="County" T="string"/>
+                            <MudTextField Value="@_appointment.Postcode" ValueChanged="v => { _appointment.Postcode = v; DebounceSaveChanges(); }" Label="Postcode" T="string"/>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard> 
+                <MudCard Elevation="25" Class="mb-4">
+                    <MudCardHeader Class="dense">
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Delivery Address</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack>
+                            <MudCheckBox Value="@_appointment.DeliveryAddressSameAsOrderAddress" ValueChanged="(bool v) => { _appointment.DeliveryAddressSameAsOrderAddress = v; DebounceSaveChanges(); }" Label="Same as the order address"/>
+
+                            @if (!_appointment.DeliveryAddressSameAsOrderAddress)
+                            {
+                                <MudTextField Value="@_appointment.DeliveryAddress1" ValueChanged="v => { _appointment.DeliveryAddress1 = v; DebounceSaveChanges(); }" Label="Address 1" T="string"/>
+                                <MudTextField Value="@_appointment.DeliveryAddress2" ValueChanged="v => { _appointment.DeliveryAddress2 = v; DebounceSaveChanges(); }" Label="Address 2" T="string"/>
+                                <MudTextField Value="@_appointment.DeliveryTown" ValueChanged="v => { _appointment.DeliveryTown = v; DebounceSaveChanges(); }" Label="Town" T="string"/>
+                                <MudTextField Value="@_appointment.DeliveryCounty" ValueChanged="v => { _appointment.DeliveryCounty = v; DebounceSaveChanges(); }" Label="County" T="string"/>
+                                <MudTextField Value="@_appointment.DeliveryPostcode" ValueChanged="v => { _appointment.DeliveryPostcode = v; DebounceSaveChanges(); }" Label="Postcode" T="string"/>
+                            }
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+
+                <MudCard Elevation="25" Class="mb-4">
+                    <MudCardHeader Class="dense">
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Customer Contact Details</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack>
+                            <MudTextField Value="@_appointment.Telephone" ValueChanged="v => { _appointment.Telephone = v; DebounceSaveChanges(); }" Label="Telephone" T="string"/>
+                            <MudTextField Value="@_appointment.AlternativeTelephone" ValueChanged="v => { _appointment.AlternativeTelephone = v; DebounceSaveChanges(); }" Label="Alternative Telephone" T="string"/>
+                            <MudTextField Value="@_appointment.Email" ValueChanged="v => { _appointment.Email = v; DebounceSaveChanges(); }" Label="Email" T="string"/>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+                
+            </MudTabPanel>
+            <MudTabPanel Text="Other">
+
+                <MudCard Elevation="25" Class="mb-4">
+                    <MudCardContent>
+                        <MudStack>
+                            <MudTextField Label="Appointment Date" T="string" Value="@(_appointment.AppointmentDate.ToString("dd/MM/yyyy"))" ReadOnly="true"/>
+                            <MudSelect Value="@_appointment.CustomerType" ValueChanged="v => { _appointment.CustomerType = v; DebounceSaveChanges(); }" Label="Customer Type" T="CustomerType">
+                                @foreach (var customerType in (CustomerType[])Enum.GetValues(typeof(CustomerType)))
+                                {
+                                    <MudSelectItem T="CustomerType" Value="@customerType">@customerType.GetDisplayName()</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudTabPanel>
+            <MudTabPanel Text="Details">
+                <MudCard Elevation="25" Class="floating-actions-container mb-4">
+                    @if (_appointment.QuoteLines.Any())
+                    {
+                        <MudCardContent>
+                            @{
+                                var productTable = _appointment.ToProductTable();
+                            }
+                            @foreach (var tableSection in productTable.Sections)
+                            {
+                                <MudText Typo="Typo.subtitle1">@tableSection.ProductType.Humanize()</MudText>
+                                <MudTable Items="@tableSection.Lines" Dense="true">
+                                    <HeaderContent>
+                                        @foreach (var propertyName in tableSection.PropertyNames)
+                                        {
+                                            <MudTh>@propertyName.Humanize()</MudTh>
+                                        }
+                                        <MudTh></MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        @foreach (var propertyName in tableSection.PropertyNames)
+                                        {
+                                            <MudTd>@context.GetPropertyValue(propertyName)</MudTd>
+                                        }
+                                        <MudTd>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="e => OpenAddLineDialogAsync(context)"></MudIconButton>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="e => OpenDeleteLineDialogAsync(context)"></MudIconButton>
+                                        </MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            }
+                        </MudCardContent>
+                    }
+                    <MudCardActions Class="floating-actions dense">
+                        <MudFab @onclick="e => OpenAddLineDialogAsync(new QuoteLine())" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Add" DropShadow="false" Size="Size.Small"></MudFab>
+                    </MudCardActions>
+                </MudCard>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudContainer>
