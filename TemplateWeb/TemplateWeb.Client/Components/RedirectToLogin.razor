@@ -1,0 +1,14 @@
+﻿@inject JwtAuthService AuthService
+@inject NavigationManager Navigation
+
+
+@code {
+    protected override void OnInitialized()
+    {
+        // TODO: This should ideally let the user know they need to login on auth timeout without needing some kind of navigation/api action
+        if (!AuthService.IsAuthenticated && !Navigation.Uri.Contains("login"))
+        {
+             Navigation.NavigateTo("/login");
+        }
+    }
+}

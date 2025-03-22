@@ -1,11 +1,9 @@
 ﻿@page "/calendar"
-@using System.Text.Json
-@using System.Net
 
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 
 @inject NavigationManager NavigationManager
-@inject HttpClient HttpClient
+@inject ApiHelper ApiHelper
 
 <PageTitle>Calendar</PageTitle>
 
@@ -27,22 +25,8 @@
     private async Task RefreshCalendar()
     {
         var calendarUrl = $"api/appointments/calendar?fromDate={_dateRange.Start:yyyy-MM-dd}&toDate={_dateRange.End:yyyy-MM-dd}";
-        var getCalendarDataResponse = await HttpClient.GetAsync(calendarUrl);
-        if (getCalendarDataResponse.IsSuccessStatusCode)
-        {
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var data = await getCalendarDataResponse.Content.ReadAsStringAsync();
-            _calendar = JsonSerializer.Deserialize<Template.Models.Models.Calendar>(data, options);
-            StateHasChanged();
-        }
-        else
-        {
-            if (getCalendarDataResponse.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                NavigationManager.NavigateTo("login");
-            }
-            // TODO: Do generic error handling
-        }
+        _calendar = await ApiHelper.GetAsync<Template.Models.Models.Calendar>(calendarUrl);
+        StateHasChanged();
     }
 
     private void NavigateToAddAppointment(DateTime appointmentDateTime)
